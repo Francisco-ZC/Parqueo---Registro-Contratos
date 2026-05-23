@@ -14,7 +14,7 @@ type AuthProviderProps = {children: ReactNode;};
 // 2. El Provider envuelve toda la app y mantiene el estado de sesión
 export function AuthProvider({ children }: AuthProviderProps) {
  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true); // true mientras Firebase verifica
+ const [loading, setLoading] = useState(true); // true mientras Firebase verifica
 
   useEffect(() => {
     // 3. Al montar, nos suscribimos a cambios de sesión

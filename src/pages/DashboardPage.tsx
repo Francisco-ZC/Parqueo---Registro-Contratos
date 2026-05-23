@@ -1,5 +1,6 @@
 import { logout } from '../services/authService';
 import { useAuth } from '../hooks/useAuth';
+import '../css/DashboardPage.css';
 
 export function DashboardPage() {
   const { firebaseUser } = useAuth();
@@ -13,160 +14,43 @@ export function DashboardPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        backgroundColor: '#f5f5f5',
-      }}
-    >
-      {/* Header */}
-      <header
-        style={{
-          backgroundColor: '#1e293b',
-          color: '#ffffff',
-          padding: '16px 24px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
+    <div className="dashboard-page">
+      <header className="dashboard-header">
         <div>
-          <h1 style={{ margin: 0 }}>Sistema de Parqueos</h1>
-
-          <p
-            style={{
-              margin: '4px 0 0 0',
-              fontSize: '14px',
-              opacity: 0.9,
-            }}
-          >
+          <h1 className="dashboard-header__title">Sistema de Parqueos</h1>
+          <p className="dashboard-header__user">
             Usuario: {firebaseUser?.displayName || firebaseUser?.email}
           </p>
         </div>
-
-        <button
-          onClick={handleLogout}
-          style={{
-            padding: '10px 16px',
-            border: 'none',
-            borderRadius: '8px',
-            backgroundColor: '#ef4444',
-            color: '#ffffff',
-            cursor: 'pointer',
-            fontWeight: 600,
-          }}
-        >
+        <button onClick={handleLogout} className="logout-button">
           Cerrar sesión
         </button>
       </header>
 
-      {/* Main content */}
-      <main
-        style={{
-          padding: '24px',
-        }}
-      >
-        <h2
-          style={{
-            marginBottom: '24px',
-          }}
-        >
-          Dashboard Administrativo
-        </h2>
+      <main className="dashboard-main">
+        <h2 className="dashboard-main__heading">Dashboard Administrativo</h2>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '16px',
-          }}
-        >
-          {/* Clientes */}
-          <section
-            style={{
-              backgroundColor: '#ffffff',
-              padding: '20px',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-            }}
-          >
+        <div className="dashboard-grid">
+          <section className="dashboard-card">
             <h3>Clientes</h3>
-
-            <p>
-              Administración de clientes registrados en el sistema.
-            </p>
-
-            <button
-              style={{
-                marginTop: '12px',
-                padding: '10px 14px',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: '#2563eb',
-                color: '#ffffff',
-                cursor: 'pointer',
-              }}
-            >
+            <p>Administración de clientes registrados en el sistema.</p>
+            <button className="dashboard-card__button dashboard-card__button--blue">
               Ver clientes
             </button>
           </section>
 
-          {/* Pagos */}
-          <section
-            style={{
-              backgroundColor: '#ffffff',
-              padding: '20px',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-            }}
-          >
+          <section className="dashboard-card">
             <h3>Pagos</h3>
-
-            <p>
-              Control de pagos mensuales, semanales y quincenales.
-            </p>
-
-            <button
-              style={{
-                marginTop: '12px',
-                padding: '10px 14px',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: '#16a34a',
-                color: '#ffffff',
-                cursor: 'pointer',
-              }}
-            >
+            <p>Control de pagos mensuales, semanales y quincenales.</p>
+            <button className="dashboard-card__button dashboard-card__button--green">
               Ver pagos
             </button>
           </section>
 
-          {/* Reportes */}
-          <section
-            style={{
-              backgroundColor: '#ffffff',
-              padding: '20px',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-            }}
-          >
+          <section className="dashboard-card">
             <h3>Reportes</h3>
-
-            <p>
-              Generación de reportes administrativos y financieros.
-            </p>
-
-            <button
-              style={{
-                marginTop: '12px',
-                padding: '10px 14px',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: '#7c3aed',
-                color: '#ffffff',
-                cursor: 'pointer',
-              }}
-            >
+            <p>Generación de reportes administrativos y financieros.</p>
+            <button className="dashboard-card__button dashboard-card__button--purple">
               Ver reportes
             </button>
           </section>
