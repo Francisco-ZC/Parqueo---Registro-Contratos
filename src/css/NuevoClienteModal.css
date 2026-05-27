@@ -1,0 +1,98 @@
+/* ============================================================
+   NUEVO CLIENTE MODAL
+   Importar en: components/NuevoClienteModal.tsx
+   ============================================================ */
+
+/* ── Vehicle block ── */
+.vehicle-block {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  background: var(--surface);
+  position: relative;
+  margin-top: 12px;
+  transition: var(--transition);
+}
+
+.vehicle-block:focus-within {
+  border-color: var(--border2);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.06);
+}
+
+.vehicle-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.vehicle-block-title {
+  font-family: var(--font-head);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue-mid);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vehicle-block-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* ── Next payment preview ── */
+.next-payment-preview {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: var(--sky-pale);
+  border: 1px solid var(--sky-light);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: #0369A1;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.next-payment-preview strong {
+  font-weight: 700;
+  color: #0C4A6E;
+}
+
+/* ── Add vehicle button ── */
+.add-vehicle-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--blue-mid);
+  font-family: var(--font-head);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.add-vehicle-btn:hover {
+  background: var(--sky-pale);
+  border-color: var(--blue-mid);
+}
+
+/* ── Tarifa auto-fill highlight ── */
+.tarifa-display {
+  padding: 9px 12px;
+  border: 1.5px solid var(--sky-light);
+  border-radius: var(--radius-sm);
+  background: var(--sky-pale);
+  font-weight: 700;
+  color: var(--blue);
+  font-size: 14px;
+  font-family: var(--font-head);
+  cursor: default;
+}
