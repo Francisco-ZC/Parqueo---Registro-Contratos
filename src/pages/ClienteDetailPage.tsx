@@ -13,7 +13,7 @@
 
 import { useState } from 'react';
 import '../css/components.css';
-import '../css/ClienteDetailPage.css';
+import '../css/ClienteDetailsPage.css';
 import { ConfirmDialog, StatusBadge, PeriodoBadge } from '../components/Uicomponents';
 import { formatMonto, formatFecha, getInitials, labelVehiculo, labelContrato } from '../utils/Formatters';
 import { daysUntil } from '../utils/DateUtils';

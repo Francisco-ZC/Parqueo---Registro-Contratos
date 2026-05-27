@@ -22,7 +22,7 @@
  */
 
 import { useState } from 'react';
-import '../css/components.css';
+import '../css/Components.css';
 import '../css/DashboardPage.css';
 import { StatusBadge, PeriodoBadge } from '../components/Uicomponents';
 import { formatMonto, formatFecha, getInitials } from '../utils/Formatters';

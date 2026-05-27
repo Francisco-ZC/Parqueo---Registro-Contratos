@@ -45,8 +45,8 @@ import type { Cliente, Pago, ToastItem, ToastType } from './models/Types';
 import { addPeriod, todayISO }  from './utils/DateUtils';
 
 // CSS global — importar aquí UNA SOLA VEZ
-import './css/variables.css';
-import './css/components.css';
+import './css/Variables.css';
+import './css/Components.css';
 import './App.css'; // tus estilos actuales de App
 
 // ─────────────────────────────────────────────────────────────
