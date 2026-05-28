@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { login } from '../services/authService';
-import '../css/LoginPage.css'; // Importamos estilos específicos para esta página
+import { login, signInWithGoogle } from '../services/authService'; // Import signInWithGoogle
+import '../css/LoginPage.css';
 
 export function LoginPage() {
   const [email, setEmail] = useState<string>('');
@@ -21,6 +21,20 @@ export function LoginPage() {
     } catch (err) {
       console.error(err);
       setError('Correo o contraseña incorrectos.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    try {
+      setLoading(true);
+      setError('');
+      await signInWithGoogle();
+      // If sign-in is successful, onAuthStateChanged will handle navigation
+    } catch (err) {
+      console.error("Error with Google Sign-In:", err);
+      setError('No se pudo iniciar sesión con Google. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -68,6 +82,18 @@ export function LoginPage() {
             {loading ? 'Ingresando...' : 'Iniciar sesión'}
           </button>
         </form>
+
+        <div className="divider">
+          <span>---------------   O   ---------------</span>
+        </div> 
+
+        <button
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+          className={`google-login-button ${loading ? 'google-login-button--loading' : ''}`}
+        >
+          {loading ? 'Ingresando con Google...' : 'Iniciar sesión con Google'}
+        </button>
       </div>
     </div>
   );
