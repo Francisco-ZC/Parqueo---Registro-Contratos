@@ -44,7 +44,7 @@
   font-size: 14px;
 }
 
-.login-button {
+.login-button, .google-login-button {
   width: 100%;
   padding: 12px;
   border: none;
@@ -55,6 +55,13 @@
   cursor: pointer;
 }
 
-.login-button--loading {
+.login-button--loading, .google-login-button--loading {
   cursor: not-allowed;
+}
+
+.divider {
+  display: flex;
+  font-weight: 500;
+  justify-content: center;
+  margin: 12px 0;
 }

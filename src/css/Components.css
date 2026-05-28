@@ -313,7 +313,7 @@ tbody tr.no-hover:hover { background: transparent; }
   gap: 5px;
 }
 
-.form-label {
+.form-label, .divider {
   font-family: var(--font-head);
   font-size: 11px;
   font-weight: 700;

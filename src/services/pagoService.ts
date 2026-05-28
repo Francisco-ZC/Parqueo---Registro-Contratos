@@ -1,25 +1,13 @@
 /**
  * SERVICIO: pagoService
  * =====================
- * Todas las operaciones de Firestore para la colección /pagos.
+ * Operaciones de Firestore para la colección /pago.
  *
- * COLECCIÓN: /pagos/{autoId}
+ * CAMBIO RESPECTO A LA VERSIÓN ANTERIOR:
+ * `PagoInput` ahora incluye `clienteNombre`, que se guarda en el documento
+ * para que la vista de Reportes pueda mostrar el nombre sin queries adicionales.
  *
- * Los pagos son registros INMUTABLES — una vez creados, no se modifican.
- * Funcionan como una bitácora contable: solo se agregan, nunca se editan.
- *
- * FLUJO COMPLETO DE CONFIRMACIÓN DE PAGO:
- * Cuando el admin hace clic en "Confirmar pago", el componente debe llamar
- * a AMBAS funciones en orden:
- *
- *   // 1. Avanza la fecha en el alquiler
- *   await confirmarPagoYAvanzar(placa);
- *
- *   // 2. Registra el pago en el historial
- *   await crearPago({ clienteId, placa, monto, registradoPor });
- *
- * Si solo se llama una sin la otra, los datos quedan inconsistentes.
- * Considera envolver ambas en un try/catch para manejar el error juntas.
+ * COLECCIÓN: /pago/{autoId}
  */
 
 import {
@@ -41,9 +29,6 @@ import type { Pago, PagoInput } from "../models/Pago";
 
 const COLECCION = "pago";
 
-// ─────────────────────────────────────────────────────────────
-// HELPER: Snapshot → Pago
-// ─────────────────────────────────────────────────────────────
 function snapshotAPago(
   snapshot: DocumentSnapshot | QueryDocumentSnapshot
 ): Pago {
@@ -53,17 +38,10 @@ function snapshotAPago(
   };
 }
 
-// ─────────────────────────────────────────────────────────────
-// CREATE — Registrar un nuevo pago
-// ─────────────────────────────────────────────────────────────
+// ─── CREATE ───────────────────────────────────────────────────
 /**
- * Crea un registro de pago en /pagos.
- *
- * `serverTimestamp()` asegura que `fechaPago` sea la hora del servidor,
- * no la del navegador del admin — importante para la consistencia del historial.
- *
- * `monto` se guarda como snapshot del valor actual — si la tarifa cambia
- * en el futuro, el historial seguirá mostrando lo que se cobró en ese momento.
+ * Registra un nuevo pago. Guarda `clienteNombre` para evitar joins en reportes.
+ * `fechaPago` la pone el servidor con serverTimestamp() — no el cliente.
  */
 export async function crearPago(input: PagoInput): Promise<Pago> {
   const ref = collection(db, COLECCION);
@@ -76,28 +54,19 @@ export async function crearPago(input: PagoInput): Promise<Pago> {
   return {
     id: docRef.id,
     ...input,
-    fechaPago: Timestamp.now(), // aproximado — el servidor establece el valor real
+    fechaPago: Timestamp.now(), // aproximado para la respuesta inmediata
   };
 }
 
-// ─────────────────────────────────────────────────────────────
-// READ — Obtener un pago por ID
-// ─────────────────────────────────────────────────────────────
+// ─── READ: uno por ID ─────────────────────────────────────────
 export async function obtenerPagoPorId(id: string): Promise<Pago | null> {
   const docRef = doc(db, COLECCION, id);
   const snapshot = await getDoc(docRef);
-
   if (!snapshot.exists()) return null;
   return snapshotAPago(snapshot);
 }
 
-// ─────────────────────────────────────────────────────────────
-// READ — Obtener todos los pagos (para la vista de reportes)
-// ─────────────────────────────────────────────────────────────
-/**
- * Devuelve todos los pagos, del más reciente al más antiguo.
- * Esta es la query principal de la pantalla de Reportes.
- */
+// ─── READ: todos (para Reportes) ──────────────────────────────
 export async function obtenerTodosLosPagos(): Promise<Pago[]> {
   const ref = collection(db, COLECCION);
   const q = query(ref, orderBy("fechaPago", "desc"));
@@ -105,13 +74,7 @@ export async function obtenerTodosLosPagos(): Promise<Pago[]> {
   return snapshot.docs.map(snapshotAPago);
 }
 
-// ─────────────────────────────────────────────────────────────
-// READ — Obtener pagos de un cliente específico
-// ─────────────────────────────────────────────────────────────
-/**
- * Devuelve el historial de pagos de un cliente, del más reciente al más antiguo.
- * Se usa en la vista de detalle del cliente.
- */
+// ─── READ: por cliente ────────────────────────────────────────
 export async function obtenerPagosPorCliente(
   clienteId: string
 ): Promise<Pago[]> {
@@ -125,13 +88,7 @@ export async function obtenerPagosPorCliente(
   return snapshot.docs.map(snapshotAPago);
 }
 
-// ─────────────────────────────────────────────────────────────
-// READ — Obtener pagos de un vehículo específico
-// ─────────────────────────────────────────────────────────────
-/**
- * Devuelve el historial de pagos de una placa específica.
- * Útil para auditar el historial de un alquiler en particular.
- */
+// ─── READ: por placa ──────────────────────────────────────────
 export async function obtenerPagosPorPlaca(placa: string): Promise<Pago[]> {
   const ref = collection(db, COLECCION);
   const q = query(
@@ -143,17 +100,7 @@ export async function obtenerPagosPorPlaca(placa: string): Promise<Pago[]> {
   return snapshot.docs.map(snapshotAPago);
 }
 
-// ─────────────────────────────────────────────────────────────
-// READ — Obtener el último pago de una placa (para auditoría)
-// ─────────────────────────────────────────────────────────────
-/**
- * Devuelve el pago más reciente de un alquiler específico.
- *
- * NOTA: Esta función existe para auditoría o debugging. En el flujo normal
- * del dashboard NO se usa — `proximoPago` y `ultimaFechaPago` almacenados
- * en /alquileres hacen este lookup innecesario para la operación diaria.
- * Aquí se demuestra que /pagos puede reconstituir esa información si fuera necesario.
- */
+// ─── READ: último pago de una placa (auditoría) ───────────────
 export async function obtenerUltimoPagoPorPlaca(
   placa: string
 ): Promise<Pago | null> {
@@ -164,21 +111,13 @@ export async function obtenerUltimoPagoPorPlaca(
     orderBy("fechaPago", "desc")
   );
   const snapshot = await getDocs(q);
-
   if (snapshot.empty) return null;
   return snapshotAPago(snapshot.docs[0]);
 }
 
-// ─────────────────────────────────────────────────────────────
-// DELETE — Solo para limpieza de datos de prueba
-// ─────────────────────────────────────────────────────────────
-/**
- * Elimina un pago. Usar ÚNICAMENTE para corregir duplicados accidentales
- * o limpiar datos de prueba. En producción, los registros de pagos deben
- * preservarse para auditoría.
- */
+// ─── DELETE (solo datos de prueba / corrección) ───────────────
 export async function eliminarPago(id: string): Promise<void> {
-  const { deleteDoc } = await import("firebase/firestore");
   const docRef = doc(db, COLECCION, id);
+  const { deleteDoc } = await import("firebase/firestore");
   await deleteDoc(docRef);
 }

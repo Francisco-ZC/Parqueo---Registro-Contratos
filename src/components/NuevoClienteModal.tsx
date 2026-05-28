@@ -1,34 +1,24 @@
 /**
  * COMPONENTE: NuevoClienteModal
  * ==============================
- * Modal para registrar un nuevo cliente con sus alquileres.
- *
- * Características:
- * - Datos del cliente: nombre (requerido), cédula, teléfono, correo
- * - Hasta 4 bloques de alquiler, cada uno con sus campos
- * - Tarifa se auto-calcula según tipo de vehículo, contrato y periodo
- * - Preview de la próxima fecha de pago al elegir la primera fecha
- * - Confirmación antes de guardar y antes de cancelar (si hay datos)
- *
- * Props:
- * - open: si el modal está visible
- * - onClose: cierra el modal
- * - onGuardar: recibe los datos del formulario para guardarlos
+ * FIX 2: el campo de monto ahora es editable.
+ * Se auto-calcula al cambiar tipo/contrato/periodo,
+ * pero el admin puede sobreescribirlo si necesita una tarifa especial.
  */
 
-import { useState } from 'react';
-import '../css/Components.css';
-import '../css/NuevoClienteModal.css';
-import { ConfirmDialog } from './Uicomponents';
-import { calcTarifa, formatMonto, formatFecha } from '../utils/Formatters';
-import { addPeriod } from '../utils/DateUtils';
+import { useState } from "react";
+import "../css/components.css";
+import "../css/NuevoClienteModal.css";
+import { ConfirmDialog } from "./Uicomponents";
+import { calcTarifa, formatMonto, formatFecha } from "../utils/Formatters";
+import { addPeriod } from "../utils/DateUtils";
 import type {
   ClienteInput,
   AlquilerInput,
   TipoVehiculo,
   TipoContrato,
   PeriodoCobro,
-} from '../models/Types';
+} from "../models/Types";
 
 interface NuevoClienteModalProps {
   open: boolean;
@@ -36,18 +26,16 @@ interface NuevoClienteModalProps {
   onGuardar: (data: ClienteInput) => void;
 }
 
-// Estado vacío para los datos del cliente
-const EMPTY_CLIENTE = { nombre: '', cedula: '', telefono: '', correo: '' };
+const EMPTY_CLIENTE = { nombre: "", cedula: "", telefono: "", correo: "" };
 
-// Estado vacío para un bloque de alquiler
 function emptyAlquiler(): AlquilerInput {
   return {
-    placa: '',
-    tipoVehiculo: 'liviano',
-    tipoContrato: 'diurno',
-    periodo: 'mensual',
-    monto: calcTarifa('liviano', 'mensual', 'diurno'),
-    fechaPrimerPago: '',
+    placa: "",
+    tipoVehiculo: "liviano",
+    tipoContrato: "diurno",
+    periodo: "mensual",
+    monto: calcTarifa("liviano", "mensual", "diurno"),
+    fechaPrimerPago: "",
   };
 }
 
@@ -56,30 +44,37 @@ export default function NuevoClienteModal({
   onClose,
   onGuardar,
 }: NuevoClienteModalProps) {
-  const [form, setForm]         = useState(EMPTY_CLIENTE);
+  const [form, setForm]             = useState(EMPTY_CLIENTE);
   const [alquileres, setAlquileres] = useState<AlquilerInput[]>([]);
   const [confirmCancel, setConfirmCancel]   = useState(false);
   const [confirmGuardar, setConfirmGuardar] = useState(false);
 
-  // Resetea el formulario a estado inicial
   function reset() {
     setForm(EMPTY_CLIENTE);
     setAlquileres([]);
   }
 
-  // Actualiza un campo del alquiler en la posición i
-  // Si cambia tipo/contrato/periodo, recalcula el monto automáticamente
-  function updateAlquiler(
-    i: number,
-    field: keyof AlquilerInput,
-    value: string
-  ) {
+  /**
+   * FIX 2 — monto editable
+   * =======================
+   * Antes: el monto siempre se recalculaba al cambiar tipo/contrato/periodo,
+   * sobreescribiendo cualquier edición manual.
+   *
+   * Ahora: el monto se recalcula automáticamente SOLO cuando cambia
+   * tipo de vehículo, tipo de contrato o periodo.
+   * Si el admin cambia el monto directamente (field === 'monto'),
+   * guardamos el valor que escribió sin tocar nada más.
+   *
+   * Esto permite tarifas especiales por cliente sin cambiar las tarifas base.
+   */
+  function updateAlquiler(i: number, field: keyof AlquilerInput, value: string | number) {
     setAlquileres((prev) => {
       const next = [...prev];
       const updated = { ...next[i], [field]: value };
 
-      // Recalcular tarifa si cambia alguno de estos tres campos
-      if (['tipoVehiculo', 'tipoContrato', 'periodo'].includes(field)) {
+      // Solo recalcular monto si cambia un campo que afecta la tarifa,
+      // no cuando el admin edita el monto directamente
+      if (field === "tipoVehiculo" || field === "tipoContrato" || field === "periodo") {
         updated.monto = calcTarifa(
           updated.tipoVehiculo,
           updated.periodo,
@@ -93,9 +88,7 @@ export default function NuevoClienteModal({
   }
 
   function addAlquiler() {
-    if (alquileres.length < 4) {
-      setAlquileres((prev) => [...prev, emptyAlquiler()]);
-    }
+    if (alquileres.length < 4) setAlquileres((prev) => [...prev, emptyAlquiler()]);
   }
 
   function removeAlquiler(i: number) {
@@ -110,14 +103,12 @@ export default function NuevoClienteModal({
     });
   }
 
-  // Intenta cerrar — si hay datos pide confirmación
   function tryClose() {
     const hayDatos = form.nombre || alquileres.length > 0;
     if (hayDatos) setConfirmCancel(true);
     else { reset(); onClose(); }
   }
 
-  // Guarda y cierra
   function doGuardar() {
     onGuardar({ ...form, alquileres });
     reset();
@@ -133,21 +124,16 @@ export default function NuevoClienteModal({
     <div className="modal-overlay" onClick={tryClose}>
       <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
 
-        {/* Header */}
         <div className="modal-header">
           <div>
             <div className="modal-title">Nuevo cliente</div>
-            <div className="modal-sub">
-              Ingresá los datos del cliente y sus alquileres
-            </div>
+            <div className="modal-sub">Ingresá los datos del cliente y sus alquileres</div>
           </div>
           <button className="close-btn" onClick={tryClose}>✕</button>
         </div>
 
-        {/* Body */}
         <div className="modal-body">
-
-          {/* ── Datos personales ── */}
+          {/* ── Datos del cliente ── */}
           <div className="section-divider">
             <div className="section-divider-label">Datos del cliente</div>
             <div className="section-divider-line" />
@@ -155,9 +141,7 @@ export default function NuevoClienteModal({
 
           <div className="form-grid form-grid-2" style={{ marginTop: 12 }}>
             <div className="form-group">
-              <label className="form-label">
-                Nombre completo <span>*</span>
-              </label>
+              <label className="form-label">Nombre completo <span>*</span></label>
               <input
                 className="form-input"
                 placeholder="Ej: Carlos Mora Jiménez"
@@ -165,7 +149,6 @@ export default function NuevoClienteModal({
                 onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
               />
             </div>
-
             <div className="form-group">
               <label className="form-label">Cédula</label>
               <input
@@ -175,7 +158,6 @@ export default function NuevoClienteModal({
                 onChange={(e) => setForm((f) => ({ ...f, cedula: e.target.value }))}
               />
             </div>
-
             <div className="form-group">
               <label className="form-label">Teléfono</label>
               <input
@@ -185,7 +167,6 @@ export default function NuevoClienteModal({
                 onChange={(e) => setForm((f) => ({ ...f, telefono: e.target.value }))}
               />
             </div>
-
             <div className="form-group">
               <label className="form-label">Correo electrónico</label>
               <input
@@ -200,50 +181,30 @@ export default function NuevoClienteModal({
 
           {/* ── Alquileres ── */}
           <div className="section-divider" style={{ marginTop: 24 }}>
-            <div className="section-divider-label">
-              Alquileres ({alquileres.length}/4)
-            </div>
+            <div className="section-divider-label">Alquileres ({alquileres.length}/4)</div>
             <div className="section-divider-line" />
           </div>
 
           {alquileres.length === 0 && (
-            <div
-              style={{
-                padding: '20px 0',
-                textAlign: 'center',
-                color: 'var(--text-3)',
-                fontSize: 13,
-              }}
-            >
+            <div style={{ padding: "20px 0", textAlign: "center", color: "var(--text-3)", fontSize: 13 }}>
               Sin alquileres registrados. Podés guardar el cliente sin alquileres.
             </div>
           )}
 
-          {/* Un bloque por alquiler */}
           {alquileres.map((v, i) => {
-            // Calculamos la fecha de la segunda cuota para el preview
-            const proxima =
-              v.fechaPrimerPago
-                ? formatFecha(addPeriod(v.fechaPrimerPago, v.periodo))
-                : null;
+            const proxima = v.fechaPrimerPago
+              ? formatFecha(addPeriod(v.fechaPrimerPago, v.periodo))
+              : null;
 
             return (
               <div key={i} className="vehicle-block">
                 <div className="vehicle-block-header">
-                  <div className="vehicle-block-title">
-                    🚗 Vehículo {i + 1}
-                  </div>
+                  <div className="vehicle-block-title">🚗 Vehículo {i + 1}</div>
                   <div className="vehicle-block-actions">
-                    <button
-                      className="btn btn-ghost btn-xs"
-                      onClick={() => clearAlquiler(i)}
-                    >
+                    <button className="btn btn-ghost btn-xs" onClick={() => clearAlquiler(i)}>
                       🗑 Limpiar
                     </button>
-                    <button
-                      className="btn btn-danger-soft btn-xs"
-                      onClick={() => removeAlquiler(i)}
-                    >
+                    <button className="btn btn-danger-soft btn-xs" onClick={() => removeAlquiler(i)}>
                       ✕ Eliminar
                     </button>
                   </div>
@@ -257,9 +218,7 @@ export default function NuevoClienteModal({
                       className="form-input"
                       placeholder="Ej: AAA-123"
                       value={v.placa}
-                      onChange={(e) =>
-                        updateAlquiler(i, 'placa', e.target.value.toUpperCase())
-                      }
+                      onChange={(e) => updateAlquiler(i, "placa", e.target.value.toUpperCase())}
                     />
                   </div>
 
@@ -269,9 +228,7 @@ export default function NuevoClienteModal({
                     <select
                       className="form-select"
                       value={v.tipoVehiculo}
-                      onChange={(e) =>
-                        updateAlquiler(i, 'tipoVehiculo', e.target.value as TipoVehiculo)
-                      }
+                      onChange={(e) => updateAlquiler(i, "tipoVehiculo", e.target.value as TipoVehiculo)}
                     >
                       <option value="liviano">🚗 Liviano</option>
                       <option value="moto">🏍 Moto</option>
@@ -279,15 +236,13 @@ export default function NuevoClienteModal({
                     </select>
                   </div>
 
-                  {/* Tipo de contrato */}
+                  {/* Contrato */}
                   <div className="form-group">
                     <label className="form-label">Contrato</label>
                     <select
                       className="form-select"
                       value={v.tipoContrato}
-                      onChange={(e) =>
-                        updateAlquiler(i, 'tipoContrato', e.target.value as TipoContrato)
-                      }
+                      onChange={(e) => updateAlquiler(i, "tipoContrato", e.target.value as TipoContrato)}
                     >
                       <option value="diurno">☀ Diurno</option>
                       <option value="nocturno">🌙 Nocturno</option>
@@ -301,52 +256,52 @@ export default function NuevoClienteModal({
                     <select
                       className="form-select"
                       value={v.periodo}
-                      onChange={(e) =>
-                        updateAlquiler(i, 'periodo', e.target.value as PeriodoCobro)
-                      }
+                      onChange={(e) => updateAlquiler(i, "periodo", e.target.value as PeriodoCobro)}
                     >
                       <option value="semanal">Semanal</option>
                       <option value="quincenal">Quincenal</option>
                       <option value="mensual">Mensual</option>
-                      <option value="cuatrimestral">Cuatrimestral</option>
                     </select>
                   </div>
 
-                  {/* Tarifa auto-calculada */}
+                  {/* FIX 2: Monto editable */}
                   <div className="form-group">
-                    <label className="form-label">Tarifa calculada</label>
-                    <div className="tarifa-display">{formatMonto(v.monto)}</div>
-                    <span className="form-hint">Auto-calculada según tipo y contrato</span>
+                    <label className="form-label">Monto (₡)</label>
+                    <input
+                      className="form-input"
+                      type="number"
+                      min={0}
+                      step={500}
+                      value={v.monto}
+                      onChange={(e) => updateAlquiler(i, "monto", Number(e.target.value))}
+                    />
+                    {/* Hint que muestra la tarifa base para referencia */}
+                    <span className="form-hint">
+                      Tarifa base: {formatMonto(calcTarifa(v.tipoVehiculo, v.periodo, v.tipoContrato))}
+                    </span>
                   </div>
 
                   {/* Fecha primer pago */}
                   <div className="form-group">
-                    <label className="form-label">
-                      Fecha primer pago <span>*</span>
-                    </label>
+                    <label className="form-label">Fecha primer pago <span>*</span></label>
                     <input
                       className="form-input"
                       type="date"
                       value={v.fechaPrimerPago}
-                      onChange={(e) =>
-                        updateAlquiler(i, 'fechaPrimerPago', e.target.value)
-                      }
+                      onChange={(e) => updateAlquiler(i, "fechaPrimerPago", e.target.value)}
                     />
                   </div>
                 </div>
 
-                {/* Preview próxima fecha */}
                 {proxima && (
                   <div className="next-payment-preview">
-                    🗓 El próximo pago (2da cuota) será el{' '}
-                    <strong>{proxima}</strong>
+                    🗓 El próximo pago (2da cuota) será el <strong>{proxima}</strong>
                   </div>
                 )}
               </div>
             );
           })}
 
-          {/* Botón agregar alquiler */}
           {alquileres.length < 4 && (
             <button className="add-vehicle-btn" onClick={addAlquiler}>
               + Agregar alquiler
@@ -354,22 +309,14 @@ export default function NuevoClienteModal({
           )}
         </div>
 
-        {/* Footer */}
         <div className="modal-footer">
-          <button className="btn btn-ghost" onClick={tryClose}>
-            Cancelar
-          </button>
-          <button
-            className="btn btn-primary"
-            disabled={!canSave}
-            onClick={() => setConfirmGuardar(true)}
-          >
+          <button className="btn btn-ghost" onClick={tryClose}>Cancelar</button>
+          <button className="btn btn-primary" disabled={!canSave} onClick={() => setConfirmGuardar(true)}>
             Guardar cliente
           </button>
         </div>
       </div>
 
-      {/* Confirmar cancelar */}
       <ConfirmDialog
         open={confirmCancel}
         icon="⚠️"
@@ -382,7 +329,6 @@ export default function NuevoClienteModal({
         onCancel={() => setConfirmCancel(false)}
       />
 
-      {/* Confirmar guardar */}
       <ConfirmDialog
         open={confirmGuardar}
         icon="✅"

@@ -1,38 +1,36 @@
 /**
  * MODELO: Pago
  * ============
- * Un pago es un registro histórico creado cada vez que se confirma un cobro.
- * Es INMUTABLE — una vez creado, no se modifica. Funciona como un ledger/bitácora.
+ * Registro histórico e inmutable de cada cobro confirmado.
  *
- * COLECCIÓN: /pagos/{autoId}
+ * COLECCIÓN: /pago/{autoId}
  *
- * RELACIÓN CON ALQUILER:
- * Aunque `ultimaFechaPago` y `proximoPago` están almacenados en /alquileres
- * por eficiencia, /pagos es la fuente de verdad histórica. Si necesitás auditar
- * o reconstruir el historial de un vehículo, consultás esta colección.
+ * CAMBIO RESPECTO A LA VERSIÓN ANTERIOR:
+ * Se agregó `clienteNombre` como campo denormalizado.
  *
- * CAMPOS DENORMALIZADOS (repetidos intencionalmente):
- * `clienteId` y `placa` se repiten aquí aunque podrían navegarse desde el alquiler.
- * Esto permite filtrar pagos por cliente O por vehículo con una sola query,
- * sin joins adicionales. Es el patrón estándar en Firestore.
- *
- * `monto` también se guarda como snapshot — si la tarifa cambia en el futuro,
- * el historial refleja lo que SE COBRÓ en ese momento, no la tarifa actual.
+ * Por qué denormalizar clienteNombre aquí:
+ * La vista de Reportes necesita mostrar el nombre del cliente junto a cada pago.
+ * Si no lo guardamos acá, tendríamos que hacer una query extra a /cliente por
+ * cada pago para obtener el nombre — eso son N queries adicionales.
+ * Guardándolo en el momento de crear el pago, Reportes carga con una sola query.
+ * El tradeoff: si el nombre del cliente cambia, los pagos viejos mostrarán
+ * el nombre anterior — aceptable para un sistema de historial contable.
  */
 
 import { Timestamp } from "firebase/firestore";
 
 export interface Pago {
-  id: string;                   // ID auto-generado por Firestore
-  clienteId: string;            // FK → clientes/{id}
-  placa: string;                // FK → alquileres/{placa}
-  monto: number;                // Monto cobrado en este pago (snapshot en ₡ CRC)
-  fechaPago: Timestamp;         // Cuándo se confirmó el pago (timestamp del servidor)
-  registradoPor: string;        // Email del admin que confirmó el pago
+  id: string;               // ID auto-generado por Firestore
+  clienteId: string;        // FK → cliente/{id}
+  placa: string;            // FK → alquiler/{placa}
+  monto: number;            // Snapshot del monto cobrado en ₡ CRC
+  fechaPago: Timestamp;     // Timestamp del servidor al confirmar
+  registradoPor: string;    // Email del admin que confirmó (de Firebase Auth)
+  clienteNombre: string;    // Denormalizado desde cliente.nombre para reportes
 }
 
 /**
- * PagoInput: datos necesarios para registrar un nuevo pago.
- * Omitimos `id` (auto-generado) y `fechaPago` (lo pone el servidor).
+ * PagoInput: lo que se necesita para registrar un nuevo pago.
+ * Omitimos `id` (auto-generado) y `fechaPago` (lo pone el servidor con serverTimestamp).
  */
 export type PagoInput = Omit<Pago, "id" | "fechaPago">;

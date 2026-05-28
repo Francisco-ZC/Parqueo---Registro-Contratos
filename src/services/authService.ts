@@ -1,4 +1,7 @@
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged} from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  GoogleAuthProvider, // Import GoogleAuthProvider
+  signInWithPopup, // Import signInWithPopup
+} from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { auth } from './firebase'; // import auth instance 
 
@@ -11,6 +14,19 @@ export async function login(email: string, password: string): Promise<void> {
   // No necesitamos retornar nada: si no lanzó error, el login fue exitoso
   // onAuthStateChanged detectará el cambio automáticamente
 }
+
+// ─── Login with Google ──────────────────────────────────────────────────────
+export async function signInWithGoogle(): Promise<void> {
+  const provider = new GoogleAuthProvider();
+  try {
+    await signInWithPopup(auth, provider); // Use signInWithPopup for Google login
+  } catch (error) {
+    console.error("Error signing in with Google", error);
+    throw error; // Re-throw the error for the component to handle
+  }
+}
+
+
 // ─── Logout ───────────────────────────────────────────────────────────────────
 // LOGOUT: invalida la sesión en Firebase y limpia el token local
 export async function logout(): Promise<void> {
