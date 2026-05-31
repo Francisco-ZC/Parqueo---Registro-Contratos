@@ -8,6 +8,8 @@ type AuthContextType = {
   firebaseUser: User | null;
   loading: boolean;
 };
+// El contexto se inicializa con un valor por defecto (no hay sesión, y estamos cargando)
+//"Variable global" que React puede pasar a cualquier componente, sin necesidad de prop drilling
 const AuthContext = createContext<AuthContextType>({firebaseUser: null, loading: true});
 type AuthProviderProps = {children: ReactNode;};
 
